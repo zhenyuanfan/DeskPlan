@@ -1,0 +1,197 @@
+<Window x:Class="DeskPlan.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="桌面计划" Width="380" Height="360" MinWidth="370" MinHeight="330"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ResizeMode="NoResize" ShowInTaskbar="False" WindowStartupLocation="Manual"
+        Closing="Window_Closing" LocationChanged="Window_LocationChanged">
+    <Window.Resources>
+        <Style x:Key="IconButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="MinWidth" Value="34" />
+            <Setter Property="Padding" Value="6" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FontSize" Value="16" />
+        </Style>
+        <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <DataTemplate x:Key="CompactTaskTemplate">
+            <Border x:Name="TaskRow" Padding="8,10" Margin="0,0,0,2" CornerRadius="9"
+                    Background="Transparent">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="28" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="24" />
+                    </Grid.ColumnDefinitions>
+                    <Button x:Name="DoneButton" Grid.Column="0" Tag="{Binding}" Content="○"
+                            Click="CompleteTask_Click" Width="22" Height="22" Padding="0"
+                            Background="Transparent" BorderThickness="0"
+                            Foreground="{DynamicResource AccentBrush}" FontSize="15" />
+                    <StackPanel Grid.Column="2" Margin="6,0,4,0">
+                        <TextBlock x:Name="TaskTitle" Text="{Binding Title}" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextBrush}" FontSize="14" />
+                        <TextBlock Text="{Binding SecondaryText}" FontSize="11" Margin="0,3,0,0"
+                                   TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}" />
+                    </StackPanel>
+                    <Button Grid.Column="3" Tag="{Binding}" Content="×" Click="DeleteTask_Click"
+                            Padding="0" Background="Transparent" BorderThickness="0"
+                            Foreground="{DynamicResource MutedTextBrush}" ToolTip="删除" />
+                </Grid>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsDone}" Value="True">
+                    <Setter TargetName="TaskRow" Property="Opacity" Value="0.5" />
+                    <Setter TargetName="TaskTitle" Property="TextDecorations" Value="Strikethrough" />
+                    <Setter TargetName="DoneButton" Property="Content" Value="✓" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+    </Window.Resources>
+
+    <Border Background="{DynamicResource CardBrush}" CornerRadius="20"
+            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+        <Grid>
+            <Grid x:Name="CompactPanel" Margin="20">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="48" />
+                    <RowDefinition Height="34" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="40" />
+                </Grid.RowDefinitions>
+                <Grid Grid.Row="0" Background="Transparent" MouseLeftButtonDown="DragArea_MouseLeftButtonDown" ToolTip="拖动这里可移动组件">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock x:Name="ClockText" FontFamily="Segoe UI Variable Display" FontSize="30"
+                                   FontWeight="Light" Foreground="{DynamicResource TextBrush}" />
+                        <StackPanel Margin="11,2,0,0">
+                            <TextBlock x:Name="TodayDateText" FontSize="12" Foreground="{DynamicResource MutedTextBrush}" />
+                            <TextBlock x:Name="RemainingText" FontSize="11" Foreground="{DynamicResource AccentBrush}" />
+                        </StackPanel>
+                    </StackPanel>
+                    <Button Grid.Column="1" Content="月历 ↗" Click="Expand_Click"
+                            Style="{StaticResource IconButton}" FontSize="12" />
+                </Grid>
+                <Grid Grid.Row="1" Margin="5,0">
+                    <TextBlock Text="今天" FontSize="20" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center" />
+                    <TextBlock x:Name="TodayEmptyText" Text="今天还没有任务" Visibility="Collapsed"
+                               HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="11"
+                               Foreground="{DynamicResource MutedTextBrush}" />
+                </Grid>
+                <ListBox x:Name="CompactTaskList" Grid.Row="2" Background="Transparent" BorderThickness="0"
+                         ItemTemplate="{StaticResource CompactTaskTemplate}"
+                         AllowDrop="True" PreviewMouseLeftButtonDown="CompactTaskList_PreviewMouseLeftButtonDown"
+                         PreviewMouseMove="CompactTaskList_PreviewMouseMove" Drop="CompactTaskList_Drop"
+                         MouseDoubleClick="CompactTaskList_MouseDoubleClick"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
+                <Grid Grid.Row="3" Margin="0,7,0,0">
+                    <TextBox x:Name="CompactAddBox" KeyDown="CompactAddBox_KeyDown"
+                             VerticalContentAlignment="Center" Padding="9,5" />
+                    <TextBlock Text="输入今天的任务，按回车…" IsHitTestVisible="False" Margin="12,0"
+                               VerticalAlignment="Center" FontSize="11" Foreground="{DynamicResource MutedTextBrush}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Text, ElementName=CompactAddBox}" Value="">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Grid>
+            </Grid>
+
+            <Grid x:Name="ExpandedPanel" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="100" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="36" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="32" />
+                </Grid.RowDefinitions>
+                <Border Grid.Row="0" Background="{DynamicResource WindowBackgroundBrush}" CornerRadius="20,20,0,0"
+                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1"
+                        MouseLeftButtonDown="DragArea_MouseLeftButtonDown">
+                    <Grid Margin="22,12">
+                        <Grid.RowDefinitions><RowDefinition Height="42"/><RowDefinition Height="34"/></Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Orientation="Horizontal">
+                            <Button Content="‹" Style="{StaticResource IconButton}" Click="PreviousMonth_Click" />
+                            <Button Content="今天" Margin="5,0" Click="TodayMonth_Click" />
+                            <Button Content="›" Style="{StaticResource IconButton}" Click="NextMonth_Click" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Margin="16,0" VerticalAlignment="Center">
+                            <TextBlock x:Name="MonthTitleText" FontSize="24" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextBrush}" />
+                        </StackPanel>
+                        <TextBlock x:Name="SelectedDateText" Grid.Row="1" Grid.ColumnSpan="2" VerticalAlignment="Center"
+                                   FontSize="11" Foreground="{DynamicResource MutedTextBrush}" />
+                        <TextBox x:Name="MonthAddBox" Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2" Margin="8,0,0,0" KeyDown="MonthAddBox_KeyDown"
+                                 VerticalContentAlignment="Center" />
+                        <TextBlock Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2" Text="添加安排，按回车保存…" IsHitTestVisible="False"
+                                   Margin="20,0" VerticalAlignment="Center" Foreground="{DynamicResource MutedTextBrush}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Text, ElementName=MonthAddBox}" Value="">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <StackPanel Grid.Column="3" Orientation="Horizontal">
+                            <Button x:Name="ReviewButton" Content="待整理" Click="Review_Click" Margin="3,0" />
+                            <Button Content="＋ 新建" Style="{StaticResource PrimaryButton}" Click="AddDetailed_Click" Margin="3,0" />
+                            <Button Content="⚙" Style="{StaticResource IconButton}" Click="Settings_Click" />
+                            <Button Content="收起" Click="Collapse_Click" Margin="3,0" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <Border x:Name="ReviewBanner" Grid.Row="1" Visibility="Collapsed" Margin="14,9,14,0"
+                        Background="#1AF79009" BorderBrush="{DynamicResource WarningBrush}"
+                        BorderThickness="1" CornerRadius="8" Padding="10,6">
+                    <TextBlock x:Name="ReviewText" Foreground="{DynamicResource TextBrush}" />
+                </Border>
+
+                <UniformGrid Grid.Row="2" Columns="7" Margin="0,10,0,0" TextBlock.Foreground="{DynamicResource MutedTextBrush}" TextBlock.FontSize="11">
+                    <TextBlock Text="周日" HorizontalAlignment="Center"/><TextBlock Text="周一" HorizontalAlignment="Center"/>
+                    <TextBlock Text="周二" HorizontalAlignment="Center"/><TextBlock Text="周三" HorizontalAlignment="Center"/>
+                    <TextBlock Text="周四" HorizontalAlignment="Center"/><TextBlock Text="周五" HorizontalAlignment="Center"/>
+                    <TextBlock Text="周六" HorizontalAlignment="Center"/>
+                </UniformGrid>
+
+                <Grid x:Name="MonthHost" Grid.Row="3" Margin="0,0,0,8" ClipToBounds="True" />
+
+                <Grid Grid.Row="4" Margin="18,0">
+                    <TextBlock Text="单击日期选择 · 双击日期新建详细任务 · 双击任务编辑"
+                               VerticalAlignment="Center" FontSize="11" Foreground="{DynamicResource MutedTextBrush}" />
+                    <TextBlock Text="数据仅保存在本机" HorizontalAlignment="Right" VerticalAlignment="Center"
+                               FontSize="11" Foreground="{DynamicResource MutedTextBrush}" />
+                </Grid>
+            </Grid>
+
+            <Border x:Name="UndoBar" Visibility="Collapsed" VerticalAlignment="Bottom" HorizontalAlignment="Center"
+                    Margin="18" Padding="14,9" CornerRadius="9" Background="#EE172033">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock x:Name="UndoText" Foreground="White" VerticalAlignment="Center" />
+                    <Button Content="撤销" Click="Undo_Click" Margin="14,0,0,0" Padding="8,3"
+                            Background="Transparent" Foreground="White" BorderBrush="#66FFFFFF" />
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Border>
+</Window>

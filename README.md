@@ -1,0 +1,73 @@
+# DeskPlan · 桌面计划
+
+轻量、本地优先的 Windows 桌面工作安排小组件。缩小时看今天，展开后看整月。
+
+当前版本：**v0.1.0 个人试用版（Pre-release）**。核心流程可用，欢迎反馈问题，暂不作为关键日程的唯一提醒工具。
+
+## 下载与使用
+
+从 [Releases](https://github.com/zhenyuanfan/DeskPlan/releases) 下载 `DeskPlan-v0.1.0-win-x64.zip`，解压到固定目录后双击 `DeskPlan.exe`。发布包自带 .NET 运行环境，无需单独安装 .NET。
+
+当前提供 Windows x64 构建，已在 Windows 11、多显示器环境验证；其他系统配置尚未完整验证。程序未做代码签名。
+
+- 拖动组件顶部可自由移动，记住位置。
+- 小组件显示时间和今日待办，输入标题后按回车快速添加。
+- 点击「月历」展开；单击日期选择，双击日期新建，双击任务编辑。
+- 设置开始和截止日期后，普通任务在首尾日期之间每天显示，共用完成状态。
+- 支持每天、工作日或每周指定日期重复，每次完成状态独立。
+- 任务完成、删除可短暂撤销；月历日期格内可滚动查看更多任务。
+- 「收起」回到今日待办原位置，月历不会记忆为全屏大小。
+- 重复启动只唤回已有窗口，不会多开；关闭窗口隐藏到托盘，右键托盘可退出。
+- 设置里可关闭登录自启动、打开数据目录。默认启用登录自启动。
+
+## 数据与升级
+
+不使用账号、不接入云同步。任务、设置与备份保存在本机：
+
+```text
+%LOCALAPPDATA%\DeskPlan
+├── deskplan.db
+├── settings.json
+└── backups/
+```
+
+应用启动时为当天创建一份数据库备份，保留最近 14 份；不是实时或云备份。升级前建议从托盘退出，再手动备份整个数据目录。升级只需替换程序文件，不要覆盖数据目录。
+
+若从某些打包的开发工具内启动，Windows 可能将数据访问重定向到宿主缓存。正式版会在打开数据库前拒绝这种环境并提示从文件资源管理器直接启动，避免误用另一份空库。不要用开发宿主缓存中的空库覆盖个人数据库。
+
+## 当前限制
+
+- 尚无独立优先级字段、整组重复任务编辑/停止入口、完整「稍后处理」收件箱；建议给普通任务指定日期。
+- 编辑或删除重复任务只影响当前日期；普通跨天任务的完成状态整项共用。
+- 提醒依赖程序运行及 Windows 通知设置，休眠、关机或错过时刻后不保证补发。
+- 深浅主题在启动时读取；目前没有安装器、自动升级和代码签名。
+- 测试覆盖数据规则、窗口位置计算与单实例逻辑，不代表所有显示器/DPI/交互组合已测试。
+
+## 开发
+
+需要 Windows 和 .NET 10 SDK：
+
+```powershell
+dotnet restore DeskPlan.slnx
+dotnet build DeskPlan.slnx -c Release
+dotnet test DeskPlan.slnx -c Release
+dotnet run --project src/DeskPlan/DeskPlan.csproj
+```
+
+技术栈：C#、WPF、Microsoft.Data.Sqlite。`src/DeskPlan` 为应用，`tests/DeskPlan.Tests` 为测试。
+
+开发验证可设置 `DESKPLAN_DATA_DIR` 指向独立测试目录，不修改个人数据或登录启动项；正式使用请取消此变量。`--inspect` 仅供 UI 检查，临时让窗口显示在任务栏。`scripts/Seed-Preview.cjs` 只会向空的 `DeskPlan-QA-*` 目录写入虚构样例。
+
+## 打包
+
+```powershell
+pwsh -File scripts/Release.ps1
+```
+
+脚本运行测试、发布自包含 Windows x64 程序，生成 ZIP 和 SHA-256 校验文件到 `artifacts/releases/v0.1.0/`。不会打包用户数据库、设置或 PDB 调试符号。
+
+## 反馈与许可
+
+请在 [Issues](https://github.com/zhenyuanfan/DeskPlan/issues) 描述复现步骤、Windows 版本和缩放比例。截图请遮盖私人任务，不要上传数据库。
+
+源码公开供查看；本项目目前未授予开源许可证。第三方组件遵循各自许可，详见 [第三方说明](THIRD-PARTY-NOTICES.md)。

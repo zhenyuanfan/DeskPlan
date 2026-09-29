@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <ApplicationIcon>Assets\DeskPlan.ico</ApplicationIcon>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <!-- WPF owns startup, so DPI awareness must be declared in the manifest, not WinForms startup. -->
+    <NoWarn>$(NoWarn);WFO0003</NoWarn>
+    <AssemblyName>DeskPlan</AssemblyName>
+    <RootNamespace>DeskPlan</RootNamespace>
+    <Version>0.1.0</Version>
+    <Product>DeskPlan 桌面计划</Product>
+    <Description>本地优先的 Windows 今日待办与月历小组件</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\DeskPlan.ico" />
+    <EmbeddedResource Include="Assets\DeskPlan.ico" LogicalName="DeskPlan.TrayIcon" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.12" />
+  </ItemGroup>
+
+</Project>
