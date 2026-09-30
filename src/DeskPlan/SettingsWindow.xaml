@@ -1,16 +1,23 @@
 <Window x:Class="DeskPlan.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="桌面计划设置" Width="430" Height="280" WindowStartupLocation="CenterOwner"
+        Title="桌面计划设置" Width="450" Height="360" WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize" Background="{DynamicResource WindowBackgroundBrush}"
         FontFamily="Microsoft YaHei UI">
     <Grid Margin="26">
         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
         <TextBlock Text="设置" FontSize="22" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" />
-        <CheckBox x:Name="AutoStartCheck" Grid.Row="1" Content="Windows 登录后自动启动"
-                  Margin="0,26,0,0" Foreground="{DynamicResource TextBrush}" />
+        <StackPanel Grid.Row="1" Margin="0,22,0,0">
+            <CheckBox x:Name="AutoStartCheck" Content="开机自启" FontSize="15"
+                      Foreground="{DynamicResource TextBrush}" />
+            <TextBlock Text="登录 Windows 后自动打开，可随时取消。" Margin="22,6,0,0"
+                       FontSize="12" Foreground="{DynamicResource MutedTextBrush}" />
+            <TextBlock Text="请保留程序所在文件夹；系统禁用启动项时需在任务管理器启用。" TextWrapping="Wrap"
+                       Margin="22,4,0,0" FontSize="11" Foreground="{DynamicResource MutedTextBrush}" />
+        </StackPanel>
         <StackPanel Grid.Row="2" Margin="0,24,0,0">
+            <TextBlock Text="只运行一个实例，重复打开会唤出已有窗口。" Margin="0,0,0,8" Foreground="{DynamicResource MutedTextBrush}" />
             <TextBlock Text="所有任务和备份都只保存在本机。" Foreground="{DynamicResource MutedTextBrush}" />
             <Button Content="打开数据目录" Click="OpenData_Click" HorizontalAlignment="Left" Margin="0,10,0,0" />
         </StackPanel>

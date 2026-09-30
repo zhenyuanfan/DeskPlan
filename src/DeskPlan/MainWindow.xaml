@@ -19,6 +19,29 @@
             <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
             <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
+        <DataTemplate x:Key="DayPreviewTaskTemplate">
+            <Border Padding="12" Margin="0,0,0,8" CornerRadius="10" Background="{DynamicResource SurfaceBrush}">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <StackPanel Margin="0,0,10,0">
+                        <TextBlock Text="{Binding Title}" FontSize="15" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush}" />
+                        <TextBlock Text="{Binding SecondaryText}" FontSize="12" TextWrapping="Wrap" Margin="0,5,0,0"
+                                   Foreground="{DynamicResource MutedTextBrush}" />
+                        <TextBlock Text="{Binding DateRangeText}" FontSize="12" Foreground="{DynamicResource MutedTextBrush}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers><DataTrigger Binding="{Binding IsMultiDay}" Value="True"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <TextBlock Text="{Binding StatusText}" Margin="0,5,0,0" FontSize="11" Foreground="{DynamicResource AccentBrush}" />
+                    </StackPanel>
+                    <Button Grid.Column="1" Content="编辑" Tag="{Binding}" Click="DayPreviewEdit_Click" FontSize="12"
+                            Padding="8,6" VerticalAlignment="Top" AutomationProperties.Name="编辑任务" />
+                </Grid>
+            </Border>
+        </DataTemplate>
         <DataTemplate x:Key="CompactTaskTemplate">
             <Border x:Name="TaskRow" Padding="8,10" Margin="0,0,0,2" CornerRadius="9"
                     Background="Transparent">
@@ -177,11 +200,41 @@
                 <Grid x:Name="MonthHost" Grid.Row="3" Margin="0,0,0,8" ClipToBounds="True" />
 
                 <Grid Grid.Row="4" Margin="18,0">
-                    <TextBlock Text="单击日期选择 · 双击日期新建详细任务 · 双击任务编辑"
+                    <TextBlock Text="悬停日期查看完整任务 · 双击日期新建 · 双击任务编辑"
                                VerticalAlignment="Center" FontSize="11" Foreground="{DynamicResource MutedTextBrush}" />
                     <TextBlock Text="数据仅保存在本机" HorizontalAlignment="Right" VerticalAlignment="Center"
                                FontSize="11" Foreground="{DynamicResource MutedTextBrush}" />
                 </Grid>
+                <Canvas x:Name="DayPreviewLayer" Grid.RowSpan="5" Panel.ZIndex="10" Visibility="Collapsed">
+                    <Border x:Name="DayPreviewCard" Width="420" MaxHeight="540" Padding="18"
+                            CornerRadius="16" Background="{DynamicResource CardBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                        <Border.Effect><DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.16" /></Border.Effect>
+                        <Grid>
+                            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock x:Name="DayPreviewTitle" FontSize="19" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" />
+                                    <TextBlock x:Name="DayPreviewCount" FontSize="12" Margin="0,5,0,0" Foreground="{DynamicResource MutedTextBrush}" />
+                                </StackPanel>
+                                <Button Grid.Column="1" Content="×" Style="{StaticResource IconButton}" Click="DayPreviewClose_Click"
+                                        VerticalAlignment="Top" ToolTip="关闭（Esc）" AutomationProperties.Name="关闭当天详情" />
+                            </Grid>
+                            <ListBox x:Name="DayPreviewList" Grid.Row="1" ItemTemplate="{StaticResource DayPreviewTaskTemplate}"
+                                     Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                     ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="False"
+                                     HorizontalContentAlignment="Stretch" AutomationProperties.Name="当天完整任务列表" />
+                            <TextBlock x:Name="DayPreviewEmpty" Grid.Row="1" Text="这一天还没有安排" Margin="0,24" FontSize="14"
+                                       Foreground="{DynamicResource MutedTextBrush}" />
+                            <Grid Grid.Row="2" Margin="0,12,0,0">
+                                <TextBlock Text="移入卡片可滚动查看" FontSize="11" VerticalAlignment="Center" Foreground="{DynamicResource MutedTextBrush}" />
+                                <Button Content="＋ 当天新建" Click="DayPreviewAdd_Click" Style="{StaticResource PrimaryButton}"
+                                        HorizontalAlignment="Right" FontSize="12" />
+                            </Grid>
+                        </Grid>
+                    </Border>
+                </Canvas>
             </Grid>
 
             <Border x:Name="UndoBar" Visibility="Collapsed" VerticalAlignment="Bottom" HorizontalAlignment="Center"

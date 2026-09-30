@@ -37,6 +37,7 @@ public partial class MainWindow : Window
     public MainWindow(TaskRepository repository, AppSettings settings, bool forceExpanded = false)
     {
         InitializeComponent();
+        InitializeDayPreview();
         _repository = repository;
         _settings = settings;
         _forceExpanded = forceExpanded;
@@ -86,7 +87,6 @@ public partial class MainWindow : Window
         var dialog = new SettingsWindow(_settings) { Owner = this };
         if (dialog.ShowDialog() != true) return;
         SettingsService.Save(_settings);
-        StartupService.Apply(_settings.StartWithWindows);
     }
 
     private void MigrateSavedPosition()
@@ -134,6 +134,7 @@ public partial class MainWindow : Window
     private void RenderMonth()
     {
         if (!_loaded) return;
+        HideDayPreview();
         MonthHost.Children.Clear();
         MonthTitleText.Text = _displayMonth.ToString("yyyy年 M月");
         SelectedDateText.Text = $"已选择 {_selectedDate:M月d日}";
@@ -172,6 +173,8 @@ public partial class MainWindow : Window
             ClipToBounds = true
         };
         cell.MouseLeftButtonDown += DateCell_MouseLeftButtonDown;
+        cell.MouseEnter += DayCell_MouseEnter;
+        cell.MouseLeave += DayCell_MouseLeave;
 
         var panel = new Grid();
         panel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
@@ -192,6 +195,12 @@ public partial class MainWindow : Window
             }
         };
         header.Children.Add(dayNumber);
+        if (tasks.Count > 0)
+            header.Children.Add(new TextBlock
+            {
+                Text = $"{tasks.Count} 项", FontSize = 11, Margin = new Thickness(5, 5, 0, 0),
+                Foreground = (System.Windows.Media.Brush)FindResource("MutedTextBrush")
+            });
         if (isToday)
         {
             header.Children.Add(new TextBlock
@@ -218,7 +227,7 @@ public partial class MainWindow : Window
 
     private FrameworkElement CreateMonthTaskLine(TaskItem task)
     {
-        var row = new Grid { Height = 24, Tag = task, ToolTip = $"{task.Title}\n{task.DateRangeText} {task.TimeText}\n{task.Notes}".Trim() };
+        var row = new Grid { Height = 26, Tag = task };
         row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(14) });
         row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -252,7 +261,7 @@ public partial class MainWindow : Window
 
         var title = new TextBlock
         {
-            Text = task.Title, Tag = task, FontSize = 12, VerticalAlignment = VerticalAlignment.Center,
+            Text = task.Title, Tag = task, FontSize = 13, VerticalAlignment = VerticalAlignment.Center,
             TextTrimming = TextTrimming.CharacterEllipsis,
             Foreground = task.IsDone ? (Brush)FindResource("MutedTextBrush") : (Brush)FindResource("TextBrush")
         };
@@ -301,6 +310,7 @@ public partial class MainWindow : Window
 
     private void SetExpanded(bool expanded, bool save = true)
     {
+        HideDayPreview();
         if (save) RememberPosition();
         _positioning = true;
         WindowState = WindowState.Normal;

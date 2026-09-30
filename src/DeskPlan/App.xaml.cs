@@ -59,7 +59,8 @@ public partial class App : System.Windows.Application
             if (dialog is not null) dialog.Activate();
             else window.ShowAndLocate();
         }));
-        StartupService.Apply(settings.StartWithWindows);
+        if (!StartupService.TryApply(settings.StartWithWindows, out var startupError))
+            System.Windows.MessageBox.Show(window, startupError, "开机自启未生效", MessageBoxButton.OK, MessageBoxImage.Warning);
     }
 
     protected override void OnExit(ExitEventArgs e)

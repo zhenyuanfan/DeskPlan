@@ -18,7 +18,13 @@ public partial class SettingsWindow : Window
 
     private void Save_Click(object sender, RoutedEventArgs e)
     {
-        _settings.StartWithWindows = AutoStartCheck.IsChecked == true;
+        var enabled = AutoStartCheck.IsChecked == true;
+        if (!StartupService.TryApply(enabled, out var error))
+        {
+            System.Windows.MessageBox.Show(this, error, "设置未保存", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+        _settings.StartWithWindows = enabled;
         DialogResult = true;
     }
 
