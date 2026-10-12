@@ -149,6 +149,98 @@ public sealed class TaskRepositoryTests : IDisposable
         Assert.Empty(_repository.GetTasksForDate(newStart.AddDays(3)));
     }
 
+    [Theory]
+    [InlineData(RepeatKind.Daily)]
+    [InlineData(RepeatKind.Weekdays)]
+    [InlineData(RepeatKind.SelectedDays)]
+    public void AutomaticRecurringTasksSkipHolidayAndResumeAfterwards(RepeatKind repeat)
+    {
+        _repository.Add(new TaskItem
+        {
+            Title = "自动工作安排", RepeatKind = repeat, RepeatDays = "0,1,2,3,4,5,6",
+            RepeatStartDate = new DateOnly(2026, 9, 28), StartMinutes = 9 * 60
+        });
+        for (var day = 1; day <= 7; day++) Assert.Empty(_repository.GetTasksForDate(new DateOnly(2026, 10, day)));
+        Assert.Single(_repository.GetTasksForDate(new DateOnly(2026, 9, 30)));
+        Assert.Single(_repository.GetTasksForDate(new DateOnly(2026, 10, 8)));
+        Assert.Empty(_repository.GetOverdue(new DateOnly(2026, 10, 8)));
+    }
+
+    [Fact]
+    public void WorkingDayRepeatIncludesMakeupSaturdayButNotOrdinaryWeekend()
+    {
+        _repository.Add(new TaskItem
+        {
+            Title = "工作日安排", RepeatKind = RepeatKind.Weekdays, RepeatStartDate = new DateOnly(2026, 10, 1)
+        });
+        Assert.Single(_repository.GetTasksForDate(new DateOnly(2026, 10, 10)));
+        Assert.Empty(_repository.GetTasksForDate(new DateOnly(2026, 10, 11)));
+        Assert.Empty(_repository.GetTasksForDate(new DateOnly(2026, 10, 17)));
+    }
+
+    [Fact]
+    public void DailyStillIncludesOrdinaryWeekendsAndSelectedDaysKeepTheirWeekdayRule()
+    {
+        _repository.Add(new TaskItem { Title = "每天", RepeatKind = RepeatKind.Daily, RepeatStartDate = Monday });
+        _repository.Add(new TaskItem { Title = "周一", RepeatKind = RepeatKind.SelectedDays, RepeatDays = "1", RepeatStartDate = Monday });
+        Assert.Equal("每天", Assert.Single(_repository.GetTasksForDate(new DateOnly(2026, 10, 10))).Title);
+        Assert.Equal("每天", Assert.Single(_repository.GetTasksForDate(new DateOnly(2026, 10, 11))).Title);
+        Assert.Equal(2, _repository.GetTasksForDate(new DateOnly(2026, 10, 12)).Count);
+    }
+
+    [Fact]
+    public void ManualHolidayTasksRemainVisibleAndDoNotReenableTheRecurringSeries()
+    {
+        var holiday = new DateOnly(2026, 10, 1);
+        _repository.Add(new TaskItem { Title = "例行工作", RepeatKind = RepeatKind.Daily, RepeatStartDate = Monday });
+        _repository.AddQuick("手动假期安排", holiday);
+        Assert.Equal("手动假期安排", Assert.Single(_repository.GetTasksForDate(holiday)).Title);
+        Assert.Empty(_repository.GetTasksForDate(holiday.AddDays(1)));
+        Assert.Single(_repository.GetOverdue(holiday.AddDays(1)));
+        Assert.Equal("例行工作", Assert.Single(_repository.GetTasksForDate(new DateOnly(2026, 10, 8))).Title);
+    }
+
+    [Theory]
+    [InlineData(WorkStatus.Completed)]
+    [InlineData(WorkStatus.InProgress)]
+    [InlineData(WorkStatus.Skipped)]
+    public void ExistingRecordedHolidayStatusSurvivesCalendarChange(WorkStatus status)
+    {
+        var holiday = new DateOnly(2026, 10, 1);
+        _repository.Add(new TaskItem { Title = "已有记录", RepeatKind = RepeatKind.Daily, RepeatStartDate = Monday });
+        var recorded = Assert.Single(_repository.GetTasksForDate(Monday));
+        recorded.DisplayDate = holiday;
+        _repository.UpdateStatus(recorded, status);
+        var reopened = new TaskRepository(Path.Combine(_directory, "test.db"));
+        reopened.Initialize();
+        Assert.Equal(status, Assert.Single(reopened.GetTasksForDate(holiday)).Status);
+        Assert.Empty(reopened.GetTasksForDate(holiday.AddDays(1)));
+        reopened.Delete(recorded);
+        Assert.Empty(reopened.GetTasksForDate(holiday));
+    }
+
+    [Fact]
+    public void ExplicitHolidayEditsRemainButSortOnlyRecordsDoNotCreateExceptions()
+    {
+        var holiday = new DateOnly(2026, 10, 1);
+        _repository.Add(new TaskItem { Title = "已有安排", RepeatKind = RepeatKind.Daily, RepeatStartDate = Monday });
+        var item = Assert.Single(_repository.GetTasksForDate(Monday));
+        item.DisplayDate = holiday;
+        _repository.Reorder([item]);
+        Assert.Empty(_repository.GetTasksForDate(holiday));
+        item.Title = "假期手动调整";
+        _repository.UpdateTask(item);
+        Assert.Equal(item.Title, Assert.Single(_repository.GetTasksForDate(holiday)).Title);
+    }
+
+    [Fact]
+    public void UnavailableCalendarYearFallsBackToOriginalRepeatRule()
+    {
+        _repository.Add(new TaskItem { Title = "工作日", RepeatKind = RepeatKind.Weekdays, RepeatStartDate = Monday });
+        Assert.Single(_repository.GetTasksForDate(new DateOnly(2027, 1, 1)));
+        Assert.Empty(_repository.GetTasksForDate(new DateOnly(2027, 1, 2)));
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_directory)) Directory.Delete(_directory, true);

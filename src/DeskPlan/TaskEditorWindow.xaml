@@ -58,7 +58,7 @@
                 <ComboBox x:Name="RepeatCombo" Grid.Column="1" SelectionChanged="RepeatCombo_SelectionChanged" Padding="8,6">
                     <ComboBoxItem Content="不重复" Tag="0"/>
                     <ComboBoxItem Content="每天" Tag="1"/>
-                    <ComboBoxItem Content="工作日" Tag="2"/>
+                    <ComboBoxItem Content="工作日（含调休补班）" Tag="2"/>
                     <ComboBoxItem Content="每周指定日期" Tag="3"/>
                 </ComboBox>
             </Grid>
@@ -71,6 +71,8 @@
                 <CheckBox x:Name="SaturdayCheck" Content="六" Tag="6" Margin="0,0,12,0"/>
                 <CheckBox x:Name="SundayCheck" Content="日" Tag="0"/>
             </WrapPanel>
+            <TextBlock Text="重复任务自动跳过官方放假日；假期临时安排请选择“不重复”。"
+                       TextWrapping="Wrap" FontSize="11" Margin="0,8,0,0" Foreground="{DynamicResource MutedTextBrush}" />
         </StackPanel>
 
         <Grid Grid.Row="6" Margin="0,14,0,0">

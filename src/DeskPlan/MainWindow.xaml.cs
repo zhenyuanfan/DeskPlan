@@ -129,6 +129,8 @@ public partial class MainWindow : Window
         ClockText.Text = now.ToString("HH:mm");
         TodayDateText.Text = now.ToString("M月d日 dddd");
         RemainingText.Text = $"剩余 {_todayTasks.Count(x => !x.IsDone)} 项";
+        if (!ChineseHolidayCalendar.HasYear(now.Year)) RemainingText.Text += " · 节假日待更新";
+        RemainingText.ToolTip = ChineseHolidayCalendar.CoverageText(now.Year);
     }
 
     private void RenderMonth()
@@ -138,6 +140,9 @@ public partial class MainWindow : Window
         MonthHost.Children.Clear();
         MonthTitleText.Text = _displayMonth.ToString("yyyy年 M月");
         SelectedDateText.Text = $"已选择 {_selectedDate:M月d日}";
+        CalendarStatusText.Text = ChineseHolidayCalendar.CoverageText(_displayMonth.Year);
+        CalendarStatusText.Foreground = (Brush)FindResource(ChineseHolidayCalendar.HasYear(_displayMonth.Year)
+            ? "MutedTextBrush" : "WarningBrush");
 
         var first = _displayMonth;
         var offset = (int)first.DayOfWeek;
@@ -195,6 +200,13 @@ public partial class MainWindow : Window
             }
         };
         header.Children.Add(dayNumber);
+        if (ChineseHolidayCalendar.GetAdjustment(date) is { } holiday)
+            header.Children.Add(new TextBlock
+            {
+                Text = holiday.IsWorkingDay ? "班" : "休", FontSize = 11, Margin = new Thickness(2, 5, 0, 0),
+                Foreground = (Brush)FindResource(holiday.IsWorkingDay ? "WarningBrush" : "SuccessBrush"),
+                ToolTip = holiday.Name + (holiday.IsWorkingDay ? "调休补班" : "放假，自动重复任务跳过；可手动新建")
+            });
         if (tasks.Count > 0)
             header.Children.Add(new TextBlock
             {

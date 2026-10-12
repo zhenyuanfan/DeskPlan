@@ -153,14 +153,16 @@ public sealed class TaskRepository
             while (reader.Read())
             {
                 var item = ReadTask(reader, date, true);
-                if (OccursOn(item, date)) recurring.Add(item);
+                recurring.Add(item);
             }
         }
 
         foreach (var item in recurring)
         {
-            ApplyOccurrence(connection, item, date);
-            if (item.Status != (WorkStatus)(-1)) result.Add(item);
+            // Explicit edits and recorded work survive a calendar update. Merely
+            // reordering an automatic occurrence is not a manual holiday exception.
+            var explicitlyRecorded = ApplyOccurrence(connection, item, date);
+            if (item.Status != (WorkStatus)(-1) && (OccursOn(item, date) || explicitlyRecorded)) result.Add(item);
         }
 
         return result
@@ -471,17 +473,18 @@ public sealed class TaskRepository
     private static bool OccursOn(TaskItem item, DateOnly date)
     {
         if (item.RepeatStartDate.HasValue && date < item.RepeatStartDate.Value) return false;
+        if (ChineseHolidayCalendar.IsHoliday(date)) return false;
         return item.RepeatKind switch
         {
             RepeatKind.Daily => true,
-            RepeatKind.Weekdays => date.DayOfWeek is not DayOfWeek.Saturday and not DayOfWeek.Sunday,
+            RepeatKind.Weekdays => ChineseHolidayCalendar.IsWorkingDay(date),
             RepeatKind.SelectedDays => item.RepeatDays.Split(',', StringSplitOptions.RemoveEmptyEntries)
                 .Any(x => int.TryParse(x, out var day) && day == (int)date.DayOfWeek),
             _ => false
         };
     }
 
-    private static void ApplyOccurrence(SqliteConnection connection, TaskItem item, DateOnly date)
+    private static bool ApplyOccurrence(SqliteConnection connection, TaskItem item, DateOnly date)
     {
         using var command = connection.CreateCommand();
         command.CommandText = """
@@ -492,11 +495,11 @@ public sealed class TaskRepository
         command.Parameters.AddWithValue("@id", item.Id);
         command.Parameters.AddWithValue("@date", Iso(date));
         using var reader = command.ExecuteReader();
-        if (!reader.Read()) return;
+        if (!reader.Read()) return false;
         if (reader.GetInt32(6) != 0)
         {
             item.Status = (WorkStatus)(-1);
-            return;
+            return false;
         }
         item.Status = (WorkStatus)reader.GetInt32(0);
         if (!reader.IsDBNull(1)) item.SortOrder = reader.GetInt32(1);
@@ -504,6 +507,8 @@ public sealed class TaskRepository
         if (!reader.IsDBNull(3)) item.StartMinutes = reader.GetInt32(3);
         if (!reader.IsDBNull(4)) item.EndMinutes = reader.GetInt32(4);
         if (!reader.IsDBNull(5)) item.Notes = reader.GetString(5);
+        return item.Status != WorkStatus.Pending || !reader.IsDBNull(2)
+            || !reader.IsDBNull(3) || !reader.IsDBNull(4) || !reader.IsDBNull(5);
     }
 
     private static bool OccurrenceReviewed(SqliteConnection connection, long id, DateOnly date)

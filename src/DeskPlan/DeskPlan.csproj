@@ -14,7 +14,7 @@
     <NoWarn>$(NoWarn);WFO0003</NoWarn>
     <AssemblyName>DeskPlan</AssemblyName>
     <RootNamespace>DeskPlan</RootNamespace>
-    <Version>0.1.1</Version>
+    <Version>0.1.2</Version>
     <Product>DeskPlan 桌面计划</Product>
     <Description>本地优先的 Windows 今日待办与月历小组件</Description>
   </PropertyGroup>

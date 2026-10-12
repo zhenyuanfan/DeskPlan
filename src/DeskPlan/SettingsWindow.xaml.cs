@@ -14,6 +14,7 @@ public partial class SettingsWindow : Window
         InitializeComponent();
         _settings = settings;
         AutoStartCheck.IsChecked = settings.StartWithWindows;
+        HolidayCalendarInfoText.Text = $"中国大陆官方日历：{ChineseHolidayCalendar.SupportedYears} 年。新年份需更新应用日历。";
     }
 
     private void Save_Click(object sender, RoutedEventArgs e)

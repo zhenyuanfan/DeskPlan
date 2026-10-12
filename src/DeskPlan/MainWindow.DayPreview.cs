@@ -93,6 +93,11 @@ public partial class MainWindow
         var tasks = _repository.GetTasksForDate(date).OrderByDescending(x => x.IsMultiDay).ToList();
         DayPreviewTitle.Text = date.ToString("M月d日 · dddd");
         DayPreviewCount.Text = $"共 {tasks.Count} 项 · 未完成 {tasks.Count(x => !x.IsDone)} 项";
+        if (ChineseHolidayCalendar.GetAdjustment(date) is { } holiday)
+            DayPreviewCount.Text += $" · {holiday.Name}{(holiday.IsWorkingDay ? "补班" : "休息")}";
+        DayPreviewEmpty.Text = ChineseHolidayCalendar.IsHoliday(date)
+            ? "节假日，自动重复任务已跳过。\n有临时安排可点下方“当天新建”。"
+            : "这一天还没有安排";
         DayPreviewList.ItemsSource = tasks;
         DayPreviewEmpty.Visibility = tasks.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         DayPreviewList.Visibility = tasks.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
@@ -101,7 +106,8 @@ public partial class MainWindow
         var viewport = new System.Drawing.SizeF((float)ExpandedPanel.ActualWidth, (float)ExpandedPanel.ActualHeight);
         // A newly visible WPF ListBox is measured again after binding creates its rows.
         // Fix the card's outer size before positioning so that second layout cannot push it off-screen.
-        var desiredHeight = tasks.Count == 0 ? 190 : Math.Min(540, 180 + tasks.Count * 120);
+        var desiredHeight = tasks.Count == 0 ? (ChineseHolidayCalendar.IsHoliday(date) ? 230 : 190)
+            : Math.Min(540, 180 + tasks.Count * 120);
         var placement = DayPreviewLayout.Place(anchor, viewport, new System.Drawing.SizeF(420, desiredHeight));
         DayPreviewCard.Width = placement.Width;
         DayPreviewCard.Height = placement.Height;

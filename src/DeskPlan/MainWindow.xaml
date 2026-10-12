@@ -202,7 +202,8 @@
                 <Grid Grid.Row="4" Margin="18,0">
                     <TextBlock Text="悬停日期查看完整任务 · 双击日期新建 · 双击任务编辑"
                                VerticalAlignment="Center" FontSize="11" Foreground="{DynamicResource MutedTextBrush}" />
-                    <TextBlock Text="数据仅保存在本机" HorizontalAlignment="Right" VerticalAlignment="Center"
+                    <TextBlock x:Name="CalendarStatusText" HorizontalAlignment="Right" VerticalAlignment="Center"
+                               ToolTip="重复任务跳过官方放假日，手动新建的普通任务照常显示。数据仅保存在本机。"
                                FontSize="11" Foreground="{DynamicResource MutedTextBrush}" />
                 </Grid>
                 <Canvas x:Name="DayPreviewLayer" Grid.RowSpan="5" Panel.ZIndex="10" Visibility="Collapsed">
