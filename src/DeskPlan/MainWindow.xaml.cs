@@ -17,6 +17,7 @@ namespace DeskPlan;
 public partial class MainWindow : Window
 {
     private readonly TaskRepository _repository;
+    private readonly ReminderService _reminderService;
     private readonly AppSettings _settings;
     private readonly bool _forceExpanded;
     private readonly ObservableCollection<TaskItem> _todayTasks = [];
@@ -39,6 +40,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         InitializeDayPreview();
         _repository = repository;
+        _reminderService = new ReminderService(repository);
         _settings = settings;
         _forceExpanded = forceExpanded;
         _displayMonth = new DateOnly(_selectedDate.Year, _selectedDate.Month, 1);
@@ -68,6 +70,7 @@ public partial class MainWindow : Window
             MigrateSavedPosition();
             SetExpanded(_forceExpanded || _settings.StartExpanded, false);
             ReloadAll();
+            CheckNotifications();
         };
     }
 
@@ -150,33 +153,51 @@ public partial class MainWindow : Window
         var cells = (int)Math.Ceiling((offset + DateTime.DaysInMonth(first.Year, first.Month)) / 7d) * 7;
         cells = Math.Clamp(cells, 35, 42);
 
-        var monthGrid = new UniformGrid { Columns = 7, Rows = cells / 7 };
+        // On a short/high-DPI screen retain room for a date and at least one task.
+        // Scroll the calendar instead of squeezing six weeks into unreadable slivers.
+        var minimumCalendarHeight = cells / 7 * 84;
+        var monthGrid = new UniformGrid
+        {
+            Columns = 7, Rows = cells / 7,
+            Height = Math.Max(minimumCalendarHeight, MonthHost.ActualHeight)
+        };
         for (var index = 0; index < cells; index++)
         {
             var date = start.AddDays(index);
             monthGrid.Children.Add(CreateDateCell(date));
         }
-        MonthHost.Children.Add(monthGrid);
+        var monthScroll = new ScrollViewer
+        {
+            Content = monthGrid,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled
+        };
+        monthScroll.SizeChanged += (_, e) => monthGrid.Height = Math.Max(minimumCalendarHeight, e.NewSize.Height);
+        monthScroll.ScrollChanged += (_, e) =>
+        {
+            if (e.VerticalChange != 0) HideDayPreview();
+        };
+        MonthHost.Children.Add(monthScroll);
     }
 
     private Border CreateDateCell(DateOnly date)
     {
         var isCurrentMonth = date.Month == _displayMonth.Month && date.Year == _displayMonth.Year;
         var isToday = date == DateOnly.FromDateTime(DateTime.Today);
-        var isSelected = date == _selectedDate;
         var tasks = _repository.GetTasksForDate(date);
 
         var cell = new Border
         {
             Tag = date,
-            Background = (Brush)FindResource(isSelected ? "AccentSoftBrush" : isCurrentMonth ? "CardBrush" : "WindowBackgroundBrush"),
-            BorderBrush = (Brush)FindResource("BorderBrush"),
-            BorderThickness = new Thickness(0, 0.5, 0.5, 0),
-            Padding = new Thickness(8, 6, 7, 5),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(10),
+            Margin = new Thickness(2),
+            Padding = new Thickness(7, 6, 6, 4),
             Cursor = Cursors.Hand,
-            Opacity = isCurrentMonth ? 1 : 0.65,
+            Opacity = isCurrentMonth ? 1 : 0.6,
             ClipToBounds = true
         };
+        ApplyDateCellAppearance(cell, date);
         cell.MouseLeftButtonDown += DateCell_MouseLeftButtonDown;
         cell.MouseEnter += DayCell_MouseEnter;
         cell.MouseLeave += DayCell_MouseLeave;
@@ -188,14 +209,16 @@ public partial class MainWindow : Window
         var header = new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal };
         var dayNumber = new Border
         {
-            CornerRadius = new CornerRadius(16),
+            CornerRadius = new CornerRadius(9),
             Background = isToday ? (Brush)FindResource("TodayBrush") : System.Windows.Media.Brushes.Transparent,
-            Padding = isToday ? new Thickness(7, 3, 7, 3) : new Thickness(1, 3, 5, 3),
+            MinWidth = 28,
+            Padding = new Thickness(5, 3, 5, 3),
             Child = new TextBlock
             {
                 Text = date.Day.ToString(),
-                FontSize = 15,
-                FontWeight = isToday ? FontWeights.SemiBold : FontWeights.Normal,
+                FontSize = 14,
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                FontWeight = FontWeights.SemiBold,
                 Foreground = isToday ? System.Windows.Media.Brushes.White : (Brush)FindResource("TextBrush")
             }
         };
@@ -213,14 +236,6 @@ public partial class MainWindow : Window
                 Text = $"{tasks.Count} 项", FontSize = 11, Margin = new Thickness(5, 5, 0, 0),
                 Foreground = (System.Windows.Media.Brush)FindResource("MutedTextBrush")
             });
-        if (isToday)
-        {
-            header.Children.Add(new TextBlock
-            {
-                Text = "今天", Margin = new Thickness(6, 3, 0, 0), FontSize = 11,
-                Foreground = (Brush)FindResource("TodayBrush")
-            });
-        }
         Grid.SetRow(header, 0);
         panel.Children.Add(header);
 
@@ -235,6 +250,16 @@ public partial class MainWindow : Window
         panel.Children.Add(taskScroll);
         cell.Child = panel;
         return cell;
+    }
+
+    private void ApplyDateCellAppearance(Border cell, DateOnly date)
+    {
+        var selected = date == _selectedDate;
+        var currentMonth = date.Month == _displayMonth.Month && date.Year == _displayMonth.Year;
+        var background = selected ? "AccentSoftBrush" : !currentMonth ? "WindowBackgroundBrush"
+            : date.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday ? "HeaderBrush" : "CardBrush";
+        cell.Background = (Brush)FindResource(background);
+        cell.BorderBrush = (Brush)FindResource(selected ? "AccentBrush" : "SoftBorderBrush");
     }
 
     private FrameworkElement CreateMonthTaskLine(TaskItem task)
@@ -292,7 +317,7 @@ public partial class MainWindow : Window
         row.ContextMenu = menu;
         return new Border
         {
-            Child = row, CornerRadius = new CornerRadius(5), Margin = new Thickness(0, 1, 0, 1),
+            Child = row, CornerRadius = new CornerRadius(6), Margin = new Thickness(0, 1, 0, 1),
             Background = task.IsMultiDay ? (Brush)FindResource("AccentSoftBrush") : System.Windows.Media.Brushes.Transparent,
             BorderThickness = task.IsMultiDay ? new Thickness(3, 0, 0, 0) : new Thickness(0),
             BorderBrush = (Brush)FindResource("AccentBrush"), Opacity = task.IsDone ? 0.6 : 1
@@ -309,14 +334,18 @@ public partial class MainWindow : Window
 
     private void CheckNotifications()
     {
-        var now = DateTime.Now;
-        var date = DateOnly.FromDateTime(now);
-        var minute = now.Hour * 60 + now.Minute;
-        foreach (var task in _repository.GetTasksForDate(date).Where(x => !x.IsDone && x.StartMinutes == minute))
+        if (Tray is not { } tray) return;
+        try
         {
-            if (_repository.WasNotified(task.Id, date)) continue;
-            Tray?.Notify("该开始了", task.Title);
-            _repository.MarkNotified(task.Id, date);
+            _reminderService.CheckAndNotify(DateTime.Now, tray.Notify);
+        }
+        catch (Exception error)
+        {
+            // Reminders are a background convenience: a transient system/database
+            // failure must not close the planner. The next timer tick can retry.
+            // Do not log exception messages, which may contain personal data.
+            System.Diagnostics.Trace.TraceWarning("Reminder check failed ({0}); retry on the next tick.",
+                error.GetType().Name);
         }
     }
 
@@ -502,11 +531,10 @@ public partial class MainWindow : Window
         else
         {
             SelectedDateText.Text = $"已选择 {_selectedDate:M月d日}";
-            if (MonthHost.Children.OfType<UniformGrid>().FirstOrDefault() is { } grid)
+            if (MonthHost.Children.OfType<ScrollViewer>().FirstOrDefault()?.Content is UniformGrid grid)
                 foreach (var dayCell in grid.Children.OfType<Border>())
                     if (dayCell.Tag is DateOnly day)
-                        dayCell.Background = (Brush)FindResource(day == date ? "AccentSoftBrush"
-                            : day.Month == _displayMonth.Month && day.Year == _displayMonth.Year ? "CardBrush" : "WindowBackgroundBrush");
+                        ApplyDateCellAppearance(dayCell, day);
         }
         e.Handled = true;
     }

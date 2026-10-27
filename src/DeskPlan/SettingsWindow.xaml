@@ -1,32 +1,49 @@
 <Window x:Class="DeskPlan.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="桌面计划设置" Width="450" Height="425" WindowStartupLocation="CenterOwner"
-        ResizeMode="NoResize" Background="{DynamicResource WindowBackgroundBrush}"
-        FontFamily="Microsoft YaHei UI">
-    <Grid Margin="26">
-        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-        <TextBlock Text="设置" FontSize="22" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" />
-        <StackPanel Grid.Row="1" Margin="0,22,0,0">
-            <CheckBox x:Name="AutoStartCheck" Content="开机自启" FontSize="15"
-                      Foreground="{DynamicResource TextBrush}" />
-            <TextBlock Text="登录 Windows 后自动打开，可随时取消。" Margin="22,6,0,0"
-                       FontSize="12" Foreground="{DynamicResource MutedTextBrush}" />
-            <TextBlock Text="请保留程序所在文件夹；系统禁用启动项时需在任务管理器启用。" TextWrapping="Wrap"
-                       Margin="22,4,0,0" FontSize="11" Foreground="{DynamicResource MutedTextBrush}" />
-        </StackPanel>
-        <StackPanel Grid.Row="2" Margin="0,24,0,0">
-            <TextBlock Text="重复任务自动跳过节假日，手动安排照常保留。" Margin="0,0,0,6" Foreground="{DynamicResource TextBrush}" />
-            <TextBlock x:Name="HolidayCalendarInfoText" TextWrapping="Wrap" FontSize="12" Margin="0,0,0,14" Foreground="{DynamicResource MutedTextBrush}" />
-            <TextBlock Text="只运行一个实例，重复打开会唤出已有窗口。" Margin="0,0,0,8" Foreground="{DynamicResource MutedTextBrush}" />
-            <TextBlock Text="所有任务和备份都只保存在本机。" Foreground="{DynamicResource MutedTextBrush}" />
-            <Button Content="打开数据目录" Click="OpenData_Click" HorizontalAlignment="Left" Margin="0,10,0,0" />
-        </StackPanel>
-        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Content="取消" Click="Cancel_Click" Margin="0,0,8,0" />
-            <Button Content="保存" Click="Save_Click" Width="86" Background="{DynamicResource AccentBrush}"
-                    Foreground="White" BorderBrush="{DynamicResource AccentBrush}" />
+        Title="桌面计划设置" Width="460" Height="520" WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize" Background="{DynamicResource WindowBackgroundBrush}">
+    <Grid Margin="24">
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+        <Grid Margin="0,0,0,18">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <StackPanel>
+                <TextBlock Text="设置" FontSize="24" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" />
+                <TextBlock Text="让计划自然融入每一天" Margin="0,4,0,0" FontSize="12" Foreground="{DynamicResource MutedTextBrush}" />
+            </StackPanel>
+            <Border Grid.Column="1" Background="{DynamicResource SurfaceBrush}" CornerRadius="9" Padding="10,5" VerticalAlignment="Center">
+                <TextBlock x:Name="VersionText" FontSize="11" Foreground="{DynamicResource MutedTextBrush}" />
+            </Border>
+        </Grid>
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,2,0">
+            <StackPanel>
+                <Border Padding="16" CornerRadius="14" Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Margin="0,0,0,10">
+                    <StackPanel>
+                        <CheckBox x:Name="AutoStartCheck" Content="开机自启" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" />
+                        <TextBlock Text="登录 Windows 后自动打开，可随时取消。" Margin="22,6,0,0" TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource MutedTextBrush}" />
+                        <TextBlock Text="请保留程序所在文件夹；系统禁用启动项时需在任务管理器启用。" TextWrapping="Wrap" Margin="22,4,0,0" FontSize="11" Foreground="{DynamicResource MutedTextBrush}" />
+                    </StackPanel>
+                </Border>
+                <Border Padding="16" CornerRadius="14" Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Margin="0,0,0,10">
+                    <StackPanel>
+                        <TextBlock Text="节假日安排" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" />
+                        <TextBlock Text="重复任务自动跳过节假日，手动安排照常保留。" TextWrapping="Wrap" Margin="0,6,0,0" FontSize="12" Foreground="{DynamicResource MutedTextBrush}" />
+                        <TextBlock x:Name="HolidayCalendarInfoText" TextWrapping="Wrap" FontSize="11" Margin="0,5,0,0" Foreground="{DynamicResource MutedTextBrush}" />
+                    </StackPanel>
+                </Border>
+                <Border Padding="16" CornerRadius="14" Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="本地数据" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" />
+                        <TextBlock Text="所有任务和备份都只保存在本机。" TextWrapping="Wrap" Margin="0,6,0,0" FontSize="12" Foreground="{DynamicResource MutedTextBrush}" />
+                        <TextBlock Text="只运行一个实例，重复打开会唤出已有窗口。" TextWrapping="Wrap" Margin="0,4,0,0" FontSize="11" Foreground="{DynamicResource MutedTextBrush}" />
+                        <Button Content="打开数据目录" Click="OpenData_Click" HorizontalAlignment="Left" Margin="0,10,0,0" FontSize="12" Padding="10,6" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
+            <Button Content="取消" Click="Cancel_Click" Margin="0,0,8,0" MinWidth="76" IsCancel="True" />
+            <Button Content="保存" Click="Save_Click" Width="86" Background="{DynamicResource AccentBrush}" Foreground="White" BorderBrush="{DynamicResource AccentBrush}" FontWeight="SemiBold" />
         </StackPanel>
     </Grid>
 </Window>

@@ -14,6 +14,8 @@ try {
     New-Item -ItemType Directory -Path $package -Force | Out-Null
     & $DotNet test DeskPlan.slnx -c Release
     if ($LASTEXITCODE -ne 0) { throw 'Tests failed.' }
+    & $DotNet run --project tools/DeskPlan.VisualChecks/DeskPlan.VisualChecks.csproj -c Release -- artifacts/visual-checks
+    if ($LASTEXITCODE -ne 0) { throw 'Offscreen layout checks failed.' }
     & $DotNet publish src/DeskPlan/DeskPlan.csproj -c Release -r win-x64 --self-contained true `
         -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
         -p:DebugType=None -p:DebugSymbols=false -o $package

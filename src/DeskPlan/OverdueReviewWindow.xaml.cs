@@ -14,6 +14,7 @@ public partial class OverdueReviewWindow : Window
     public OverdueReviewWindow(TaskRepository repository, IEnumerable<TaskItem> items)
     {
         InitializeComponent();
+        DialogSizing.Attach(this);
         _repository = repository;
         _items = new ObservableCollection<TaskItem>(items);
         TaskList.ItemsSource = _items;

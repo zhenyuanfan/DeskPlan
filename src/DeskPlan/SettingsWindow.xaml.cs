@@ -12,9 +12,12 @@ public partial class SettingsWindow : Window
     public SettingsWindow(AppSettings settings)
     {
         InitializeComponent();
+        DialogSizing.Attach(this);
         _settings = settings;
         AutoStartCheck.IsChecked = settings.StartWithWindows;
         HolidayCalendarInfoText.Text = $"中国大陆官方日历：{ChineseHolidayCalendar.SupportedYears} 年。新年份需更新应用日历。";
+        var version = typeof(App).Assembly.GetName().Version;
+        VersionText.Text = version is null ? "DeskPlan" : $"DeskPlan · v{version.ToString(3)}";
     }
 
     private void Save_Click(object sender, RoutedEventArgs e)

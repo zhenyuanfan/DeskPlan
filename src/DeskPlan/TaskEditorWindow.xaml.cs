@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using DeskPlan.Models;
+using DeskPlan.Services;
 
 namespace DeskPlan;
 
@@ -14,6 +15,7 @@ public partial class TaskEditorWindow : Window
         _item = item;
         _defaultDate = defaultDate;
         InitializeComponent();
+        DialogSizing.Attach(this);
         Populate();
         Loaded += (_, _) => TitleBox.Focus();
     }

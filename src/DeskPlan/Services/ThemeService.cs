@@ -16,13 +16,25 @@ public static class ThemeService
         }
         catch { }
 
-        Set(resources, "WindowBackgroundBrush", isLight ? "#F5F5F7" : "#1C1C1E");
-        Set(resources, "CardBrush", isLight ? "#FFFFFF" : "#242426");
-        Set(resources, "SurfaceBrush", isLight ? "#F2F2F7" : "#303033");
-        Set(resources, "TextBrush", isLight ? "#1D1D1F" : "#F5F5F7");
-        Set(resources, "MutedTextBrush", isLight ? "#86868B" : "#A1A1A6");
-        Set(resources, "BorderBrush", isLight ? "#E5E5EA" : "#3A3A3C");
-        Set(resources, "AccentSoftBrush", isLight ? "#EAF3FF" : "#20324B");
+        ApplyTheme(resources, isLight);
+    }
+
+    // Also used by offline visual checks; does not read or change Windows settings.
+    public static void ApplyTheme(ResourceDictionary resources, bool isLight)
+    {
+        Set(resources, "WindowBackgroundBrush", isLight ? "#F4F6FA" : "#191D25");
+        Set(resources, "CardBrush", isLight ? "#FFFFFF" : "#222833");
+        Set(resources, "SurfaceBrush", isLight ? "#F1F4F9" : "#2C3441");
+        Set(resources, "HeaderBrush", isLight ? "#F8FAFD" : "#252D39");
+        Set(resources, "SoftBorderBrush", isLight ? "#EAF0F6" : "#323C4B");
+        Set(resources, "TextBrush", isLight ? "#202B3D" : "#EEF2F8");
+        Set(resources, "MutedTextBrush", isLight ? "#68768A" : "#ACB8CB");
+        Set(resources, "BorderBrush", isLight ? "#DCE3ED" : "#404C5E");
+        Set(resources, "AccentBrush", isLight ? "#3478F6" : "#6BA4FF");
+        Set(resources, "TodayBrush", "#3478F6");
+        Set(resources, "AccentSoftBrush", isLight ? "#EDF4FF" : "#293C59");
+        Set(resources, "SuccessBrush", isLight ? "#25856A" : "#6AC4A1");
+        Set(resources, "WarningBrush", isLight ? "#B77722" : "#E7B66F");
     }
 
     private static void Set(ResourceDictionary resources, string key, string color) =>
