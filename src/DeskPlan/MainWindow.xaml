@@ -200,6 +200,8 @@
                             </TextBlock.Style>
                         </TextBlock>
                         <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button x:Name="InboxButton" Content="待安排" Click="Inbox_Click" Margin="3,0" Background="Transparent"
+                                    ToolTip="查看还没有确定日期的任务" AutomationProperties.Name="待安排任务" />
                             <Button x:Name="ReviewButton" Content="待整理" Click="Review_Click" Margin="3,0" Background="Transparent" />
                             <Button Content="＋ 新建" Style="{StaticResource PrimaryButton}" Click="AddDetailed_Click" Margin="3,0" />
                             <Button Content="&#xE713;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Style="{StaticResource IconButton}" Click="Settings_Click" ToolTip="设置" AutomationProperties.Name="设置" />

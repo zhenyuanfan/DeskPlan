@@ -109,6 +109,8 @@ public partial class MainWindow : Window
         ReloadToday();
         RenderMonth();
         UpdateReviewBanner();
+        var unscheduledCount = _repository.GetLaterTasks().Count;
+        InboxButton.Content = unscheduledCount == 0 ? "待安排" : $"待安排 {unscheduledCount}";
     }
 
     private void ReloadToday()
@@ -636,6 +638,12 @@ public partial class MainWindow : Window
 
     private void AddDetailed_Click(object sender, RoutedEventArgs e) => AddDetailed();
     private void Settings_Click(object sender, RoutedEventArgs e) => OpenSettings();
+
+    private void Inbox_Click(object sender, RoutedEventArgs e)
+    {
+        new UnscheduledTasksWindow(_repository) { Owner = this }.ShowDialog();
+        ReloadAll();
+    }
 
     private void Review_Click(object sender, RoutedEventArgs e)
     {

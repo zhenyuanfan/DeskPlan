@@ -59,7 +59,7 @@
                             <CheckBox x:Name="DueCheck" Content="截止日期" VerticalAlignment="Center" Checked="DueCheck_Changed" Unchecked="DueCheck_Changed" />
                             <DatePicker x:Name="DueDatePicker" Grid.Column="1" />
                         </Grid>
-                        <TextBlock Text="设置开始和截止日期后，普通任务将在这段时间每天显示（含首尾）。" TextWrapping="Wrap" FontSize="11" Margin="0,10,0,0" Foreground="{DynamicResource MutedTextBrush}" />
+                        <TextBlock Text="没定日期可取消勾选“开始日期”，任务会存入“待安排”。设置开始和截止日期后，普通任务将在这段时间每天显示（含首尾）。" TextWrapping="Wrap" FontSize="11" Margin="0,10,0,0" Foreground="{DynamicResource MutedTextBrush}" />
                     </StackPanel>
                 </Border>
                 <Border Style="{StaticResource SectionCard}">

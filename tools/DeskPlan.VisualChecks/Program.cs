@@ -115,7 +115,7 @@ internal static class Program
             {
                 ButtonsFit(settings);
                 TextFits(settings, "VersionText");
-                Expect(Named<TextBlock>(settings, "VersionText").Text.Contains("0.1.3"), "Wrong version badge.");
+                Expect(Named<TextBlock>(settings, "VersionText").Text.Contains("0.1.4"), "Wrong version badge.");
             });
             var editor = new TaskEditorWindow(new TaskItem
             {
@@ -137,6 +137,12 @@ internal static class Program
             Capture(review, $"{theme}-review", 624, 421, 1, () => ButtonsFit(review));
             var empty = new OverdueReviewWindow(repository, []);
             Capture(empty, $"{theme}-review-empty", 624, 321, 1, () => ButtonsFit(empty));
+            var inbox = new UnscheduledTasksWindow(repository);
+            Capture(inbox, $"{theme}-inbox", 664, 441, 1, () =>
+            {
+                ButtonsFit(inbox);
+                Expect(Named<ListBox>(inbox, "TaskList").Items.Count == 2, "Inbox did not bind unscheduled tasks.");
+            });
         }
         File.WriteAllText(Path.Combine(_output, "report.json"), JsonSerializer.Serialize(new
         {
@@ -160,6 +166,8 @@ internal static class Program
             Status = i == 7 ? WorkStatus.Completed : i == 0 ? WorkStatus.InProgress : WorkStatus.Pending,
             DueDate = i == 0 ? day.AddDays(2) : null
         });
+        repo.Add(new TaskItem { Title = "待定日期：安排下一次项目讨论", Notes = "虚构样例" });
+        repo.Add(new TaskItem { Title = "待定日期：整理以后可用的模板", DueDate = day.AddDays(14) });
         foreach (var date in new[] { new DateOnly(2026, 8, 15), new DateOnly(2026, 8, 31) })
             repo.Add(new TaskItem { Title = "六周月份的样例安排", ScheduledDate = date, StartMinutes = 540 });
     }

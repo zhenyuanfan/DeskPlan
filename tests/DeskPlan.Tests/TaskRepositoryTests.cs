@@ -97,6 +97,46 @@ public sealed class TaskRepositoryTests : IDisposable
         Assert.Empty(_repository.GetTasksForDate(Monday));
     }
 
+    [Fact]
+    public void UnscheduledTask_MovesIntoCalendarAfterDateIsAdded()
+    {
+        _repository.Add(new TaskItem { Title = "还没定日期", ScheduledDate = null });
+        var task = Assert.Single(_repository.GetLaterTasks());
+
+        task.ScheduledDate = Monday;
+        task.StartMinutes = 9 * 60;
+        task.EndMinutes = 9 * 60 + 30;
+        _repository.UpdateTask(task);
+
+        Assert.Empty(_repository.GetLaterTasks());
+        var scheduled = Assert.Single(_repository.GetTasksForDate(Monday));
+        Assert.Equal("还没定日期", scheduled.Title);
+        Assert.Equal(9 * 60, scheduled.StartMinutes);
+    }
+
+    [Fact]
+    public void UnscheduledTask_CanMoveDirectlyToToday()
+    {
+        _repository.Add(new TaskItem { Title = "今天处理", ScheduledDate = null });
+        var task = Assert.Single(_repository.GetLaterTasks());
+
+        _repository.MoveToToday(task, Monday);
+
+        Assert.Empty(_repository.GetLaterTasks());
+        Assert.Equal(Monday, Assert.Single(_repository.GetTasksForDate(Monday)).ScheduledDate);
+    }
+
+    [Fact]
+    public void CompletedUnscheduledTask_LeavesInbox()
+    {
+        _repository.Add(new TaskItem { Title = "已经完成", ScheduledDate = null });
+        var task = Assert.Single(_repository.GetLaterTasks());
+
+        _repository.UpdateStatus(task, WorkStatus.Completed);
+
+        Assert.Empty(_repository.GetLaterTasks());
+    }
+
     [Theory]
     [InlineData(2026, 9, 21)]
     [InlineData(2026, 9, 30)]
